@@ -4,29 +4,36 @@ const app = express();
 
 app.use(express.json());
 
-// Estos nombres deben ser IGUALES a los que pongas en Railway
-const MI_TOKEN = process.env.WEBHOOK_TOKEN; 
+const MI_TOKEN = process.env.WEBHOOK_TOKEN || "Shxdow_security_v1"; 
 const DISCORD_URL = process.env.DISCORD_URL; 
 
-app.post('/webhook', async (req, res) => {
-    const auth = req.headers['authorization'];
+// 1. Cambiamos a /create-url para que coincida con tu Lua
+app.post('/create-url', async (req, res) => {
+    // 2. Buscamos el token dentro del cuerpo (body) porque así lo manda tu Lua
+    const tokenRecibido = req.body.token;
 
-    // Si el token no es igual al que pusimos en Railway, bloqueamos
-    if (auth !== `Bearer ${MI_TOKEN}`) {
+    if (tokenRecibido !== MI_TOKEN) {
+        console.log("Intento de acceso fallido: Token incorrecto");
         return res.status(403).send("Acceso denegado");
     }
 
     try {
-        // Aquí enviamos a Discord lo que recibimos
+        // 3. Formateamos lo que se envía a Discord
         await axios.post(DISCORD_URL, {
-            content: req.body.mensaje || "Mensaje recibido",
+            content: `**Nuevo Log recibido**\n**Categoría:** ${req.body.category}\n**User Binary:** ${req.body.username_binary}`,
             username: "Protector de Webhook"
         });
         res.status(200).send("Enviado a Discord");
     } catch (err) {
+        console.error("Error en Discord:", err.message);
         res.status(500).send("Error al enviar a Discord");
     }
 });
 
+// Ruta extra para que no veas error en el navegador
+app.get('/', (req, res) => {
+    res.send('Servidor Backend Activo ✅');
+});
+
 const PORT = process.env.PORT || 3000;
-app.listen(PORT, () => console.log("Servidor listo"));
+app.listen(PORT, () => console.log(`Servidor listo en puerto ${PORT}`));
