@@ -1,38 +1,37 @@
 const axios = require('axios');
 
-// 1. Obtenemos las variables de Railway
-const baseUrl = process.env.DISCORD_URL;
-const token = process.env.WEBHOOK_TOKEN;
+async function enviar() {
+    // Construimos la URL manualmente aquí para asegurar que NO haya errores
+    const url = process.env.DISCORD_URL.trim().replace(/\/$/, '');
+    const token = process.env.WEBHOOK_TOKEN.trim().replace(/^\//, '');
+    const webhookFull = `${url}/${token}`;
 
-// 2. Construimos la URL correctamente (poniendo la barra en medio)
-const finalWebhookUrl = `${baseUrl.trim().replace(/\/$/, '')}/${token.trim().replace(/^\//, '')}`;
+    console.log("🚀 Intentando envío ultra-limpio...");
 
-async function enviarMensaje() {
-    console.log("🚀 Enviando mensaje limpio a Discord...");
-    
     try {
-        // IMPORTANTE: Enviamos ÚNICAMENTE el campo 'content'.
-        // Esto evita el error de "webhook_service" que ves en tus logs.
-        await axios.post(finalWebhookUrl, {
-            content: "✅ **Shxdow Security Online**\nConexión establecida exitosamente desde Railway."
+        await axios({
+            method: 'post',
+            url: webhookFull,
+            // IMPORTANTE: Solo 'content'. Si hay algo más, Discord da error 400.
+            data: {
+                content: "✅ **Sistema Shxdow Activo**\nSi ves este mensaje, la configuración es correcta."
+            },
+            headers: {
+                'Content-Type': 'application/json'
+            }
         });
-
-        console.log("✅ ¡MENSAJE ENVIADO CON ÉXITO!");
-    } catch (error) {
-        console.error("❌ Error en el envío:");
-        if (error.response) {
-            console.log("Código:", error.response.status);
-            console.log("Detalle de Discord:", JSON.stringify(error.response.data));
+        console.log("✅ ¡ENVIADO CON ÉXITO!");
+    } catch (e) {
+        console.log("❌ Error persistente:");
+        if (e.response) {
+            console.log("Datos que recibió Discord:", JSON.stringify(e.response.data));
         } else {
-            console.log("Error de red:", error.message);
+            console.log(e.message);
         }
     }
 }
 
-// Ejecutar al iniciar
-enviarMensaje();
+enviar();
 
-// Mantener el proceso activo para evitar errores de Railway (SIGTERM)
-setInterval(() => {
-    console.log("🛰️ Script Shxdow activo...");
-}, 60000);
+// Mantener el proceso vivo para evitar el error SIGTERM de tus logs
+setInterval(() => {}, 10000);
