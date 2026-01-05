@@ -1,37 +1,40 @@
-const axios = require('axios');
+const https = require('https');
 
-async function enviar() {
-    // Construimos la URL manualmente aquí para asegurar que NO haya errores
-    const url = process.env.DISCORD_URL.trim().replace(/\/$/, '');
-    const token = process.env.WEBHOOK_TOKEN.trim().replace(/^\//, '');
-    const webhookFull = `${url}/${token}`;
+// 1. Extraemos y limpiamos manualmente
+const baseUrl = process.env.DISCORD_URL.trim().replace(/\/$/, '');
+const token = process.env.WEBHOOK_TOKEN.trim().replace(/^\//, '');
+const fullPath = `/api/webhooks/${baseUrl.split('/webhooks/')[1]}/${token}`;
 
-    console.log("🚀 Intentando envío ultra-limpio...");
+const data = JSON.stringify({
+    content: "🚀 **PRUEBA DEFINITIVA**\nSi este mensaje llega, el problema eran los headers automáticos."
+});
 
-    try {
-        await axios({
-            method: 'post',
-            url: webhookFull,
-            // IMPORTANTE: Solo 'content'. Si hay algo más, Discord da error 400.
-            data: {
-                content: "✅ **Sistema Shxdow Activo**\nSi ves este mensaje, la configuración es correcta."
-            },
-            headers: {
-                'Content-Type': 'application/json'
-            }
-        });
-        console.log("✅ ¡ENVIADO CON ÉXITO!");
-    } catch (e) {
-        console.log("❌ Error persistente:");
-        if (e.response) {
-            console.log("Datos que recibió Discord:", JSON.stringify(e.response.data));
-        } else {
-            console.log(e.message);
-        }
+const options = {
+    hostname: 'discord.com',
+    port: 443,
+    path: fullPath,
+    method: 'POST',
+    headers: {
+        'Content-Type': 'application/json',
+        'Content-Length': data.length
     }
-}
+};
 
-enviar();
+console.log("🔗 Conectando a:", fullPath.substring(0, 30) + "...");
 
-// Mantener el proceso vivo para evitar el error SIGTERM de tus logs
-setInterval(() => {}, 10000);
+const req = https.request(options, (res) => {
+    console.log(`Código de respuesta: ${res.statusCode}`);
+    res.on('data', (d) => {
+        process.stdout.write(d);
+    });
+});
+
+req.on('error', (error) => {
+    console.error("❌ Error de red:", error);
+});
+
+req.write(data);
+req.end();
+
+// Mantener vivo
+setInterval(() => {}, 60000);
