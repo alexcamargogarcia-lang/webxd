@@ -1,38 +1,39 @@
 const axios = require('axios');
 
-const discordUrl = process.env.DISCORD_URL;
-const webhookToken = process.env.WEBHOOK_TOKEN;
+// Extraemos las variables tal cual las tienes en Railway
+const baseUrl = process.env.DISCORD_URL;
+const token = process.env.WEBHOOK_TOKEN;
 
-// Unimos la URL correctamente
-const finalWebhookUrl = discordUrl.endsWith('/') 
-    ? `${discordUrl}${webhookToken}` 
-    : `${discordUrl}/${webhookToken}`;
+// Construimos la URL asegurándonos de que haya una sola barra entre ellas
+const urlFinal = `${baseUrl.replace(/\/$/, '')}/${token.replace(/^\//, '')}`;
 
-async function startBot() {
+async function enviarMensaje() {
     console.log("🚀 Enviando mensaje limpio a Discord...");
-
+    
     try {
-        // ENVIAMOS SOLO EL CONTENIDO. 
-        // No agregues campos como "webhook_service" porque causan el Error 400.
-        await axios.post(finalWebhookUrl, {
-            content: "✅ **Shxdow Security Online**\nConexión exitosa desde Railway sin errores de parámetros."
+        // IMPORTANTE: Solo enviamos 'content'. 
+        // No agregues otros campos que causen el error de 'enum'.
+        await axios.post(urlFinal, {
+            content: "✅ **Shxdow Security Online**\nEl script ha superado el error de validación y está activo en Railway."
         });
 
-        console.log("✅ ¡MENSAJE ENVIADO CON ÉXITO!");
+        console.log("✅ ¡MENSAJE ENVIADO CON ÉXITO A DISCORD!");
     } catch (error) {
         console.error("❌ Error en el envío:");
         if (error.response) {
+            // Esto nos dirá si Discord sigue rechazando algo
             console.log("Código:", error.response.status);
-            console.log("Detalle:", JSON.stringify(error.response.data));
+            console.log("Detalle técnico:", JSON.stringify(error.response.data));
         } else {
-            console.log("Error:", error.message);
+            console.log("Error de conexión:", error.message);
         }
     }
 }
 
-startBot();
+// Ejecutar al iniciar
+enviarMensaje();
 
-// Mantener vivo el proceso
+// Mantener el proceso vivo para que Railway no lo mate
 setInterval(() => {
-    console.log("Script Shxdow activo...");
+    console.log("🛰️ Shxdow Script sigue activo...");
 }, 60000);
