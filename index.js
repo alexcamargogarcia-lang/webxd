@@ -1,42 +1,32 @@
-const express = require('express');
 const axios = require('axios');
-const app = express();
 
-app.use(express.json());
+// Extraemos las variables que configuraste en Railway
+const discordUrl = process.env.DISCORD_URL;
+const webhookToken = process.env.WEBHOOK_TOKEN;
 
-const MI_TOKEN = process.env.WEBHOOK_TOKEN; 
-const DISCORD_URL = process.env.DISCORD_URL; 
+// Unimos ambos para formar la URL completa de la Webhook
+const fullWebhookUrl = `${discordUrl}${webhookToken}`;
 
-app.post('/create-url', async (req, res) => {
-    const tokenRecibido = req.body.token;
-
-    // 1. Verificación de seguridad
-    if (!tokenRecibido || tokenRecibido !== MI_TOKEN) {
-        console.log(`❌ Bloqueado: Recibí [${tokenRecibido}] pero esperaba [${MI_TOKEN}]`);
-        return res.status(403).send("Token incorrecto");
-    }
-
+async function sendTestMessage() {
     try {
-        // 2. Intento de envío
-        await axios.post(DISCORD_URL, {
-            content: "🚀 **Prueba Final:** El puente Railway-Discord está funcionando."
+        const response = await axios.post(fullWebhookUrl, {
+            content: "✅ **Shxdow Security Online**\nEl script se ha desplegado correctamente en Railway.",
+            username: "Shxdow System",
+            avatar_url: "https://i.imgur.com/4M34hi2.png" // Puedes cambiar esto
         });
-        
-        console.log("✅ ¡MENSAJE ENVIADO A DISCORD!");
-        res.status(200).send("Enviado");
 
-    } catch (err) {
-        // 3. ESTO ES LO MÁS IMPORTANTE: Nos dirá el error real
-        if (err.response) {
-            console.error("❌ DISCORD RECHAZÓ EL MENSAJE:", err.response.data);
-        } else {
-            console.error("❌ ERROR DE CONEXIÓN:", err.message);
+        if (response.status === 204) {
+            console.log("¡Mensaje enviado a Discord con éxito!");
         }
-        res.status(500).send("Error en el destino final");
+    } catch (error) {
+        console.error("Error al enviar el mensaje:", error.response ? error.response.data : error.message);
     }
-});
+}
 
-app.get('/', (req, res) => res.send("Servidor V2 funcionando"));
+// Ejecutar la función
+sendTestMessage();
 
-const PORT = process.env.PORT || 3000;
-app.listen(PORT, () => console.log("Monitoreo activo"));
+// Mantener el proceso vivo (opcional, para que Railway no lo mate rápido)
+setInterval(() => {
+    console.log("Script activo...");
+}, 60000);
