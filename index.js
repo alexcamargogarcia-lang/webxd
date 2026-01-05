@@ -1,44 +1,44 @@
 const axios = require('axios');
 
+// Extraer variables de Railway
 const discordUrl = process.env.DISCORD_URL;
 const webhookToken = process.env.WEBHOOK_TOKEN;
 
-// Validación de seguridad
-if (!discordUrl || !webhookToken) {
-    console.error("❌ ERROR: Faltan variables de entorno.");
-    console.log("DISCORD_URL:", discordUrl ? "Configurada ✅" : "VACÍA ❌");
-    console.log("WEBHOOK_TOKEN:", webhookToken ? "Configurada ✅" : "VACÍA ❌");
-    process.exit(1);
-}
+// Función para construir la URL correctamente
+// Si la URL no tiene /, se la ponemos.
+const finalWebhookUrl = discordUrl.endsWith('/') 
+    ? `${discordUrl}${webhookToken}` 
+    : `${discordUrl}/${webhookToken}`;
 
-// Limpiamos las variables por si tienen espacios o barras de más
-const cleanUrl = discordUrl.trim().replace(/\/$/, "");
-const cleanToken = webhookToken.trim().replace(/^\//, "");
+async function startBot() {
+    console.log("🔗 URL Generada:", finalWebhookUrl.substring(0, 45) + "..."); // Log de seguridad
+    console.log("🚀 Enviando mensaje a Discord...");
 
-const fullWebhookUrl = `${cleanUrl}/${cleanToken}`;
-
-async function sendToDiscord() {
-    console.log("🚀 Enviando datos a Discord...");
     try {
-        await axios.post(fullWebhookUrl, {
-            content: "¡Conexión establecida! El script de Railway está funcionando. 🚀",
+        const response = await axios.post(finalWebhookUrl, {
+            content: "✅ **Shxdow Security Conectado**\nEl script está corriendo en Railway sin errores de URL.",
             username: "Shxdow System"
         });
-        console.log("✅ ¡Mensaje enviado con éxito!");
+
+        if (response.status === 204 || response.status === 200) {
+            console.log("✅ ¡MENSAJE ENVIADO CON ÉXITO!");
+        }
     } catch (error) {
-        console.error("❌ Error al enviar:");
+        console.error("❌ Error en el envío:");
         if (error.response) {
-            console.log("Código:", error.response.status);
-            console.log("Motivo:", error.response.data.message);
+            // Aquí verás el error real de Discord
+            console.log("Código de error:", error.response.status);
+            console.log("Detalle:", JSON.stringify(error.response.data));
         } else {
-            console.log(error.message);
+            console.log("Error de conexión:", error.message);
         }
     }
 }
 
-sendToDiscord();
+// Ejecutar al arrancar
+startBot();
 
-// Esto evita que Railway cierre el proceso inmediatamente
+// Mantener el proceso vivo para evitar que Railway lo detenga (SIGTERM)
 setInterval(() => {
-    console.log("Script activo y esperando...");
-}, 300000); // Log cada 5 minutos
+    console.log("Keep-alive: Script Shxdow activo...");
+}, 60000);
