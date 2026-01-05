@@ -10,29 +10,33 @@ const DISCORD_URL = process.env.DISCORD_URL;
 app.post('/create-url', async (req, res) => {
     const tokenRecibido = req.body.token;
 
-    // Log para ver qué llega exactamente
-    console.log(`Token esperado: [${MI_TOKEN}] | Recibido: [${tokenRecibido}]`);
-
+    // 1. Verificación de seguridad
     if (!tokenRecibido || tokenRecibido !== MI_TOKEN) {
+        console.log(`❌ Bloqueado: Recibí [${tokenRecibido}] pero esperaba [${MI_TOKEN}]`);
         return res.status(403).send("Token incorrecto");
     }
 
     try {
-        // Enviar solo texto plano para asegurar que pase
+        // 2. Intento de envío
         await axios.post(DISCORD_URL, {
-            content: `🔔 **Nuevo Log**\nUsuario: ${req.body.username_binary || "Sin nombre"}\nCategoría: ${req.body.category || "Miranda"}`
+            content: "🚀 **Prueba Final:** El puente Railway-Discord está funcionando."
         });
         
-        console.log("✅ Enviado a Discord con éxito");
-        res.status(200).send("OK");
+        console.log("✅ ¡MENSAJE ENVIADO A DISCORD!");
+        res.status(200).send("Enviado");
+
     } catch (err) {
-        // Esto nos dirá el error REAL en los logs de Railway
-        console.error("❌ Error de Discord:", err.response ? err.response.data : err.message);
-        res.status(500).send("Error en Discord");
+        // 3. ESTO ES LO MÁS IMPORTANTE: Nos dirá el error real
+        if (err.response) {
+            console.error("❌ DISCORD RECHAZÓ EL MENSAJE:", err.response.data);
+        } else {
+            console.error("❌ ERROR DE CONEXIÓN:", err.message);
+        }
+        res.status(500).send("Error en el destino final");
     }
 });
 
 app.get('/', (req, res) => res.send("Servidor V2 funcionando"));
 
 const PORT = process.env.PORT || 3000;
-app.listen(PORT, () => console.log("Sistema listo"));
+app.listen(PORT, () => console.log("Monitoreo activo"));
