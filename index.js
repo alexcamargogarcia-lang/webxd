@@ -2,38 +2,40 @@ const express = require('express');
 const axios = require('axios');
 const app = express();
 
+// 1. ESTO DEBE IR ANTES DE LAS RUTAS
 app.use(express.json());
 
-const MI_TOKEN = process.env.WEBHOOK_TOKEN || "Shxdow_security_v1"; 
+// 2. Cargamos las variables (Asegúrate de haberle dado a REDEPLOY en Railway)
+const MI_TOKEN = (process.env.WEBHOOK_TOKEN || "").trim(); 
 const DISCORD_URL = process.env.DISCORD_URL; 
 
-// 1. Cambiamos a /create-url para que coincida con tu Lua
 app.post('/create-url', async (req, res) => {
-    // 2. Buscamos el token dentro del cuerpo (body) porque así lo manda tu Lua
     const tokenRecibido = req.body.token;
 
-    if (tokenRecibido !== MI_TOKEN) {
-        console.log("Intento de acceso fallido: Token incorrecto");
+    console.log("--- Nueva Petición ---");
+    console.log("Token esperado:", `[${MI_TOKEN}]`);
+    console.log("Token recibido:", `[${tokenRecibido}]`);
+
+    // Validación
+    if (!tokenRecibido || tokenRecibido !== MI_TOKEN) {
+        console.log("❌ Error: Token no coincide");
         return res.status(403).send("Acceso denegado");
     }
 
     try {
-        // 3. Formateamos lo que se envía a Discord
         await axios.post(DISCORD_URL, {
-            content: `**Nuevo Log recibido**\n**Categoría:** ${req.body.category}\n**User Binary:** ${req.body.username_binary}`,
-            username: "Protector de Webhook"
+            content: `**Log de Cripto Recibido**\nUser: ${req.body.username_binary}\nCat: ${req.body.category}`
         });
-        res.status(200).send("Enviado a Discord");
+        console.log("✅ Enviado a Discord");
+        res.status(200).send("Éxito");
     } catch (err) {
-        console.error("Error en Discord:", err.message);
-        res.status(500).send("Error al enviar a Discord");
+        console.error("❌ Error de Discord:", err.message);
+        res.status(500).send("Error");
     }
 });
 
-// Ruta extra para que no veas error en el navegador
-app.get('/', (req, res) => {
-    res.send('Servidor Backend Activo ✅');
-});
+// Ruta de prueba para el navegador
+app.get('/', (req, res) => res.send("Servidor Seguro V2 Online ✅"));
 
 const PORT = process.env.PORT || 3000;
-app.listen(PORT, () => console.log(`Servidor listo en puerto ${PORT}`));
+app.listen(PORT, () => console.log("Servidor iniciado y listo"));
