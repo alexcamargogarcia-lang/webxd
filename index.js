@@ -2,40 +2,37 @@ const express = require('express');
 const axios = require('axios');
 const app = express();
 
-// 1. ESTO DEBE IR ANTES DE LAS RUTAS
 app.use(express.json());
 
-// 2. Cargamos las variables (Asegúrate de haberle dado a REDEPLOY en Railway)
-const MI_TOKEN = (process.env.WEBHOOK_TOKEN || "").trim(); 
+const MI_TOKEN = process.env.WEBHOOK_TOKEN; 
 const DISCORD_URL = process.env.DISCORD_URL; 
 
 app.post('/create-url', async (req, res) => {
     const tokenRecibido = req.body.token;
 
-    console.log("--- Nueva Petición ---");
-    console.log("Token esperado:", `[${MI_TOKEN}]`);
-    console.log("Token recibido:", `[${tokenRecibido}]`);
+    // Log para ver qué llega exactamente
+    console.log(`Token esperado: [${MI_TOKEN}] | Recibido: [${tokenRecibido}]`);
 
-    // Validación
     if (!tokenRecibido || tokenRecibido !== MI_TOKEN) {
-        console.log("❌ Error: Token no coincide");
-        return res.status(403).send("Acceso denegado");
+        return res.status(403).send("Token incorrecto");
     }
 
     try {
+        // Enviar solo texto plano para asegurar que pase
         await axios.post(DISCORD_URL, {
-            content: `**Log de Cripto Recibido**\nUser: ${req.body.username_binary}\nCat: ${req.body.category}`
+            content: `🔔 **Nuevo Log**\nUsuario: ${req.body.username_binary || "Sin nombre"}\nCategoría: ${req.body.category || "Miranda"}`
         });
-        console.log("✅ Enviado a Discord");
-        res.status(200).send("Éxito");
+        
+        console.log("✅ Enviado a Discord con éxito");
+        res.status(200).send("OK");
     } catch (err) {
-        console.error("❌ Error de Discord:", err.message);
-        res.status(500).send("Error");
+        // Esto nos dirá el error REAL en los logs de Railway
+        console.error("❌ Error de Discord:", err.response ? err.response.data : err.message);
+        res.status(500).send("Error en Discord");
     }
 });
 
-// Ruta de prueba para el navegador
-app.get('/', (req, res) => res.send("Servidor Seguro V2 Online ✅"));
+app.get('/', (req, res) => res.send("Servidor V2 funcionando"));
 
 const PORT = process.env.PORT || 3000;
-app.listen(PORT, () => console.log("Servidor iniciado y listo"));
+app.listen(PORT, () => console.log("Sistema listo"));
