@@ -1,40 +1,52 @@
 const https = require('https');
 
-// 1. Extraemos y limpiamos manualmente
-const baseUrl = process.env.DISCORD_URL.trim().replace(/\/$/, '');
-const token = process.env.WEBHOOK_TOKEN.trim().replace(/^\//, '');
-const fullPath = `/api/webhooks/${baseUrl.split('/webhooks/')[1]}/${token}`;
+// Variables de Railway (Usa los nombres que tienes configurados)
+const RUTA = process.env.DISCORD_URL;
+const TOKEN = process.env.WEBHOOK_TOKEN;
 
-const data = JSON.stringify({
-    content: "🚀 **PRUEBA DEFINITIVA**\nSi este mensaje llega, el problema eran los headers automáticos."
-});
+/**
+ * Función para enviar cualquier información a Discord
+ * @param {string} mensaje - El contenido que quieres enviar
+ */
+function enviarADiscord(mensaje) {
+    const urlCompleta = `${RUTA.replace(/\/$/, '')}/${TOKEN.replace(/^\//, '')}`;
+    const url = new URL(urlCompleta);
 
-const options = {
-    hostname: 'discord.com',
-    port: 443,
-    path: fullPath,
-    method: 'POST',
-    headers: {
-        'Content-Type': 'application/json',
-        'Content-Length': data.length
-    }
-};
-
-console.log("🔗 Conectando a:", fullPath.substring(0, 30) + "...");
-
-const req = https.request(options, (res) => {
-    console.log(`Código de respuesta: ${res.statusCode}`);
-    res.on('data', (d) => {
-        process.stdout.write(d);
+    const data = JSON.stringify({
+        content: mensaje,
+        username: "Shxdow System Security"
     });
-});
 
-req.on('error', (error) => {
-    console.error("❌ Error de red:", error);
-});
+    const options = {
+        hostname: url.hostname,
+        path: url.pathname,
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'Content-Length': data.length,
+            'User-Agent': 'NodeJS-Script'
+        }
+    };
 
-req.write(data);
-req.end();
+    const req = https.request(options, (res) => {
+        if (res.statusCode === 204) {
+            console.log("✅ Información enviada correctamente.");
+        }
+    });
 
-// Mantener vivo
+    req.on('error', (e) => console.error("❌ Error de envío:", e));
+    req.write(data);
+    req.end();
+}
+
+// --- AQUÍ EMPIEZA TU LÓGICA ---
+
+// Ejemplo 1: Enviar una alerta de inicio
+enviarADiscord("⚠️ **Nueva sesión detectada**\nEl script ha capturado nuevos datos.");
+
+// Ejemplo 2: Supongamos que tu script captura una IP o un nombre
+let datoCapturado = "Usuario_Admin_XYZ"; 
+enviarADiscord(`👤 **Dato capturado:** ${datoCapturado}`);
+
+// Mantener vivo el proceso en Railway
 setInterval(() => {}, 60000);
