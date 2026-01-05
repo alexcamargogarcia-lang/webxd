@@ -1,20 +1,21 @@
 const https = require('https');
 
-// Variables de Railway (Usa los nombres que tienes configurados)
-const RUTA = process.env.DISCORD_URL;
-const TOKEN = process.env.WEBHOOK_TOKEN;
+// Variables de Railway
+const base = process.env.DISCORD_URL;
+const token = process.env.WEBHOOK_TOKEN;
 
 /**
- * Función para enviar cualquier información a Discord
- * @param {string} mensaje - El contenido que quieres enviar
+ * Esta es la función que usará tu script para mandar la info
+ * @param {string} datos - La información que capture tu script
  */
-function enviarADiscord(mensaje) {
-    const urlCompleta = `${RUTA.replace(/\/$/, '')}/${TOKEN.replace(/^\//, '')}`;
-    const url = new URL(urlCompleta);
+function enviarReporte(datos) {
+    // Construcción limpia de la URL
+    const fullUrl = `${base.trim().replace(/\/$/, '')}/${token.trim().replace(/^\//, '')}`;
+    const url = new URL(fullUrl);
 
-    const data = JSON.stringify({
-        content: mensaje,
-        username: "Shxdow System Security"
+    const body = JSON.stringify({
+        username: "Shxdow Security Bot",
+        content: `📦 **Nuevo dato recibido del script:**\n\`\`\`text\n${datos}\n\`\`\``
     });
 
     const options = {
@@ -23,30 +24,24 @@ function enviarADiscord(mensaje) {
         method: 'POST',
         headers: {
             'Content-Type': 'application/json',
-            'Content-Length': data.length,
-            'User-Agent': 'NodeJS-Script'
+            'Content-Length': Buffer.byteLength(body)
         }
     };
 
-    const req = https.request(options, (res) => {
-        if (res.statusCode === 204) {
-            console.log("✅ Información enviada correctamente.");
-        }
-    });
-
-    req.on('error', (e) => console.error("❌ Error de envío:", e));
-    req.write(data);
+    const req = https.request(options);
+    req.on('error', (e) => console.error("❌ Error enviando datos:", e.message));
+    req.write(body);
     req.end();
 }
 
-// --- AQUÍ EMPIEZA TU LÓGICA ---
+// --- EJEMPLO DE CÓMO TU SCRIPT DARÁ LA INFORMACIÓN ---
 
-// Ejemplo 1: Enviar una alerta de inicio
-enviarADiscord("⚠️ **Nueva sesión detectada**\nEl script ha capturado nuevos datos.");
+// Supongamos que aquí va tu lógica de captura...
+console.log("Esperando información del script...");
 
-// Ejemplo 2: Supongamos que tu script captura una IP o un nombre
-let datoCapturado = "Usuario_Admin_XYZ"; 
-enviarADiscord(`👤 **Dato capturado:** ${datoCapturado}`);
+// Cuando el script obtiene algo, lo mandas así:
+let infoCapturada = "IP: 192.168.1.1 | Pais: Mexico | Navegador: Chrome"; // Esto lo generaría tu script
+enviarReporte(infoCapturada);
 
 // Mantener vivo el proceso en Railway
 setInterval(() => {}, 60000);
